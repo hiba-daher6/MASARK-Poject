@@ -1,0 +1,642 @@
+{
+  "name": "Job Match",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "31e5c3f3-491a-4bb9-b943-272de1f46c08",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "1a9107a8-1c67-4f7a-ac0e-32e89cf3f402",
+      "name": "Webhook",
+      "webhookId": "31e5c3f3-491a-4bb9-b943-272de1f46c08"
+    },
+    {
+      "parameters": {
+        "jsCode": "const crypto = require('crypto');\n\nfunction extractJSON(text) {\n  text = String(text || '').replace(/<think>[\\s\\S]*?<\\/think>/g, '');\n  const candidates = [];\n  let depth = 0, start = -1, inStr = false, esc = false;\n\n  for (let i = 0; i < text.length; i++) {\n    const c = text[i];\n    if (depth > 0 && inStr) {\n      if (esc) esc = false;\n      else if (c === '\\\\') esc = true;\n      else if (c === '\"') inStr = false;\n      continue;\n    }\n    if (depth > 0 && c === '\"') { inStr = true; continue; }\n    if (c === '{') {\n      if (depth === 0) start = i;\n      depth++;\n    } else if (c === '}' && depth > 0) {\n      depth--;\n      if (depth === 0) candidates.push(text.slice(start, i + 1));\n    }\n  }\n\n  let best = null;\n  for (const s of candidates) {\n    try {\n      const o = JSON.parse(s);\n      if (!best || s.length > best.len) best = { o, len: s.length };\n    } catch (e) {}\n  }\n  if (!best) throw new Error('No valid JSON in AI response: ' + text.slice(0, 300));\n  return best.o;\n}\n\nconst form = $('Webhook').first().json.body || {};\nconst item = $input.first().json;\nconst raw = item.choices?.[0]?.message?.content || item.content?.parts?.[0]?.text || item.text || '';\nconst cv = extractJSON(raw);\n\nconst salt = crypto.randomBytes(16).toString('hex');\nconst hash = crypto.scryptSync(form.password, salt, 64).toString('hex');\n\nreturn [{\n  json: {\n    username: form.name,\n    password_hash: salt + ':' + hash,\n    jobTitle: form.jobTitle,\n    name: cv.name,\n    email: cv.email,\n    phone: \"'\" + (cv.phone || ''),\n    location: cv.location,\n    links: JSON.stringify(cv.links),\n    summary: cv.summary,\n    experience: JSON.stringify(cv.experience),\n    education: JSON.stringify(cv.education),\n    certificates: JSON.stringify(cv.certificates),\n    projects: JSON.stringify(cv.projects),\n    skills: JSON.stringify(cv.skills),\n    languages: JSON.stringify(cv.languages),\n    volunteering: JSON.stringify(cv.volunteering),\n    additional_info: JSON.stringify(cv.additional_info)\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        544,
+        0
+      ],
+      "id": "2f82e4db-4661-402d-8a7d-fa2911a3905a",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1uvnfTUFu2PUsfzvnFkFXjsEXOv3CJSfy-E3ew0rRD3Y",
+          "mode": "list",
+          "cachedResultName": "CV Submissions",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1uvnfTUFu2PUsfzvnFkFXjsEXOv3CJSfy-E3ew0rRD3Y/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1uvnfTUFu2PUsfzvnFkFXjsEXOv3CJSfy-E3ew0rRD3Y/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "username": "={{ $json.username }}",
+            "password_hash": "={{ $json.password_hash }}",
+            "name": "={{ $json.name }}",
+            "email": "={{ $json.email }}",
+            "phone": "={{ $json.phone }}",
+            "location": "={{ $json.location }}",
+            "links": "={{ $json.links }}",
+            "summary": "={{ $json.summary }}",
+            "experience": "={{ $json.experience }}",
+            "education": "={{ $json.education }}",
+            "certificates": "={{ $json.certificates }}",
+            "projects": "={{ $json.projects }}",
+            "skills": "={{ $json.skills }}",
+            "languages": "={{ $json.languages }}",
+            "volunteering": "={{ $json.volunteering }}",
+            "additional_info": "={{ $json.additional_info }}",
+            "jobTitle": "={{ $json.jobTitle }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "username",
+              "displayName": "username",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "password_hash",
+              "displayName": "password_hash",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "jobTitle",
+              "displayName": "jobTitle",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "phone",
+              "displayName": "phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "location",
+              "displayName": "location",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "links",
+              "displayName": "links",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "summary",
+              "displayName": "summary",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "experience",
+              "displayName": "experience",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "education",
+              "displayName": "education",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "certificates",
+              "displayName": "certificates",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "projects",
+              "displayName": "projects",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "skills",
+              "displayName": "skills",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "languages",
+              "displayName": "languages",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "volunteering",
+              "displayName": "volunteering",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "additional_info",
+              "displayName": "additional_info",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        752,
+        0
+      ],
+      "id": "637cb360-af4f-4b6a-8c18-f84c424a9744",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "khCPYMVabfpxsqVp",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.apify.com/v2/acts/curious_coder~linkedin-jobs-scraper/run-sync-get-dataset-items?maxItems=10",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"urls\": [],\n  \"keywords\": \"{{ $json.jobTitle }}\",\n  \"location\": \"{{ $json.location }}\",\n  \"limitPerSource\": 10,\n  \"count\": 10\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        976,
+        0
+      ],
+      "id": "575db7b6-3043-4b71-9f3e-428811a381ef",
+      "name": "HTTP Request",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "yRcC3111Xs6M2FdK",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "function extractJSON(text) {\n  text = String(text || '').replace(/<think>[\\s\\S]*?<\\/think>/g, '');\n  const candidates = [];\n  let depth = 0, start = -1, inStr = false, esc = false;\n\n  for (let i = 0; i < text.length; i++) {\n    const c = text[i];\n    if (depth > 0 && inStr) {\n      if (esc) esc = false;\n      else if (c === '\\\\') esc = true;\n      else if (c === '\"') inStr = false;\n      continue;\n    }\n    if (depth > 0 && c === '\"') { inStr = true; continue; }\n    if (c === '{') {\n      if (depth === 0) start = i;\n      depth++;\n    } else if (c === '}' && depth > 0) {\n      depth--;\n      if (depth === 0) candidates.push(text.slice(start, i + 1));\n    }\n  }\n\n  let best = null;\n  for (const s of candidates) {\n    try {\n      const o = JSON.parse(s);\n      if (!best || s.length > best.len) best = { o, len: s.length };\n    } catch (e) {}\n  }\n  if (!best) throw new Error('No valid JSON in AI response');\n  return best.o;\n}\n\nconst ai = $input.all();\n\nconst urlFor = (platform, q) => {\n  const e = encodeURIComponent(q);\n  switch (platform) {\n    case 'Udemy': return `https://www.udemy.com/courses/search/?q=${e}`;\n    case 'edX': return `https://www.edx.org/search?q=${e}`;\n    case 'LinkedIn Learning': return `https://www.linkedin.com/learning/search?keywords=${e}`;\n    default: return `https://www.coursera.org/search?query=${e}`;\n  }\n};\n\nconst clamp = (n) => Math.max(0, Math.min(100, Number(n) || 0));\nconst levelOf = d => d <= 2 ? 'Beginner' : d === 3 ? 'Intermediate' : 'Advanced';\n\nconst result = ai.map((item, i) => {\n  let job;\n  try {\n    job = $('HTTP Request').itemMatching(i).json;\n  } catch (e) {\n    job = $('HTTP Request').all()[i]?.json || {};\n  }\n\n  const raw = item.json.choices?.[0]?.message?.content || '';\n  let r = {};\n  let parsed = true;\n  try {\n    r = extractJSON(raw);\n  } catch (e) {\n    parsed = false;\n  }\n\n  const skills = (Array.isArray(r.skills) ? r.skills : [])\n    .map(s => (typeof s === 'string' ? { skill: s } : s))\n    .filter(s => s && s.skill)\n    .map(s => {\n      const difficulty = Math.max(1, Math.min(5, Number(s.difficulty) || 3));\n      return {\n        skill: s.skill,\n        difficulty,\n        level: levelOf(difficulty),\n        desskill: s.desskill || '',\n        urlskill: urlFor(s.platform, s.courseSearch || s.skill)\n      };\n    })\n    .sort((a, b) => a.difficulty - b.difficulty);\n\n  return {\n    json: {\n      title: job.title,\n      companyName: job.companyName,\n      postedAt: job.postedAt,\n      link: job.link,\n      matchScore: clamp(r.matchScore),\n      summary: r.summary || '',\n      skills,\n      ...(parsed ? {} : { error: 'AI response was not valid JSON' })\n    }\n  };\n});\n\nresult.sort((a, b) => b.json.matchScore - a.json.matchScore);\nreturn result;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1456,
+        0
+      ],
+      "id": "53d8cb01-cec4-4b64-b71e-77ea6126191c",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        2384,
+        128
+      ],
+      "id": "1cc29bc5-ac4b-4a4c-9330-965898f3ede0",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://openrouter.ai/api/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  model: \"nvidia/nemotron-3.5-lightning:free\",\n  temperature: 0.2,\n  max_tokens: 4000,\n  reasoning: { effort: \"none\" },\n  messages: [{\n    role: \"user\",\n    content: `You are a job-matching assistant. Be quick and give a general judgment, do not analyze the CV and job line by line.\n\nCANDIDATE CV (JSON):\n${JSON.stringify($('Code in JavaScript').first().json, (k, v) => ['password_hash','username','email','phone'].includes(k) ? undefined : v)}\n\nJOB:\nTitle: ${$json.title}\nCompany: ${$json.companyName}\nSeniority: ${$json.seniorityLevel}\nDescription:\n${($json.descriptionText || '').slice(0, 5000)}\n\nTASKS:\n1. \"matchScore\": integer 0-100 showing how well the CV matches this job. Give a quick overall estimate based on the general fit of skills, experience, education, and seniority. Do not check each requirement one by one. Use only what is written in the CV and the job.\n2. \"summary\": a 2-3 sentence summary of the job description.\n3. \"skills\": the skills required by the job, based only on the description text. For each skill give:\n   - \"skill\": the skill name\n   - \"difficulty\": integer 1-5 showing how hard the skill is to learn (1 = easiest, 5 = hardest)\n   - \"desskill\": one sentence describing the skill\n   - \"courseSearch\": the skill name to search for as an online course\n   - \"platform\": one of \"Coursera\", \"Udemy\", \"edX\", \"LinkedIn Learning\"\n\nReturn ONLY valid JSON, no explanation, no code fences:\n\n{\"matchScore\":0,\"summary\":\"\",\"skills\":[{\"skill\":\"\",\"difficulty\":1,\"desskill\":\"\",\"courseSearch\":\"\",\"platform\":\"\"}]}`\n  }]\n}) }}",
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 1,
+              "batchInterval": 4000
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        1200,
+        0
+      ],
+      "id": "0c9edc4f-0c56-4ed4-9719-249b716cb01a",
+      "name": "HTTP Request1",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "yRcC3111Xs6M2FdK",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "binaryPropertyName": "cv",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        176,
+        0
+      ],
+      "id": "5a2ec181-90c2-4035-a959-98bca61fc84f",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://openrouter.ai/api/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  model: \"nvidia/nemotron-3.5-lightning:free\",\n  temperature: 0.2,\n  max_tokens: 4000,\n  reasoning: { effort: \"none\" },\n  messages: [{\n    role: \"user\",\n    content: `Read the CV text below and extract all the information in it.\nReturn ONLY valid JSON, no explanation, no code fences.\n\nSTRICT RULES:\n- Use ONLY what is explicitly written in the CV. Do not add, infer, improve, rephrase, or modify anything.\n- Copy names, titles, dates, and descriptions exactly as written. Keep the original language.\n- Put each item only in its correct section. Never copy the same item into two sections.\n- If a section does not exist, return [] (or \"\").\n- Anything that does not fit a section goes in \"additional_info\" exactly as written.\n- SUMMARY: if the CV has a summary, copy it exactly. Only if there is none, write a short 2-3 sentence summary using only facts from the CV.\n\nStructure: {\"name\":\"\",\"email\":\"\",\"phone\":\"\",\"location\":\"\",\"links\":[],\"summary\":\"\",\"experience\":[],\"education\":[],\"certificates\":[],\"projects\":[],\"skills\":[],\"languages\":[],\"volunteering\":[],\"additional_info\":[]}\n\nCV TEXT:\n${($json.text || '').slice(0, 12000)}`\n  }]\n}) }}",
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 1,
+              "batchInterval": 4000
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        368,
+        0
+      ],
+      "id": "9d0f37ac-5070-47b8-bf64-b3557ed80fb4",
+      "name": "HTTP Request2",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "yRcC3111Xs6M2FdK",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const levelOf = d => d <= 2 ? 'Beginner' : d === 3 ? 'Intermediate' : 'Advanced';\nconst map = new Map();\n\nfor (const item of $input.all()) {\n  for (const s of (item.json.skills || [])) {\n    if (!s || !s.skill) continue;\n    const key = String(s.skill).trim().toLowerCase();\n    const d = Math.max(1, Math.min(5, Number(s.difficulty) || 3));\n    if (!map.has(key)) {\n      map.set(key, {\n        skill: String(s.skill).trim(),\n        desskill: s.desskill || '',\n        urlskill: s.urlskill || '',\n        total: d,\n        count: 1\n      });\n    } else {\n      const m = map.get(key);\n      m.total += d;\n      m.count += 1;\n      if (!m.desskill && s.desskill) m.desskill = s.desskill;\n    }\n  }\n}\n\nconst out = [...map.values()]\n  .map(m => {\n    const difficulty = Math.round(m.total / m.count);\n    return {\n      skill: m.skill,\n      difficulty,\n      level: levelOf(difficulty),\n      desskill: m.desskill,\n      urlskill: m.urlskill\n    };\n  })\n  .sort((a, b) => a.difficulty - b.difficulty || a.skill.localeCompare(b.skill))\n  .map((s, i) => ({ week: i + 1, ...s }));\n\nreturn out.length\n  ? out.map(s => ({ json: s }))\n  : [{ json: { skill: '', note: 'No skills found' } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1680,
+        0
+      ],
+      "id": "7426a6e2-e595-46b7-ab4a-87aa140ae798",
+      "name": "Code in JavaScript2"
+    },
+    {
+      "parameters": {
+        "operation": "toJson",
+        "options": {
+          "format": false,
+          "fileName": "skills.json"
+        }
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        1904,
+        0
+      ],
+      "id": "3306d973-7949-4700-90c1-c915b90fae6a",
+      "name": "Convert to File"
+    },
+    {
+      "parameters": {
+        "jsCode": "const jobs = $('Code in JavaScript1').all().map(i => ({\n  title: i.json.title,\n  companyName: i.json.companyName,\n  postedAt: i.json.postedAt,\n  link: i.json.link,\n  matchScore: i.json.matchScore,\n  summary: i.json.summary\n}));\n\nconst roadmap = $('Code in JavaScript2').all()\n  .map(i => i.json)\n  .filter(s => s.skill);\n\nreturn [{ json: { jobs, roadmap } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2128,
+        0
+      ],
+      "id": "53f9bd8d-cc37-47ca-b5bc-1e8a59afe11e",
+      "name": "Code in JavaScript3"
+    }
+  ],
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "host": "aura12345haah.app.n8n.cloud",
+            "user-agent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:154.0) Gecko/20100101 Firefox/154.0",
+            "content-length": "3787",
+            "accept": "*/*",
+            "accept-encoding": "gzip, br",
+            "accept-language": "en-US,en;q=0.9",
+            "cdn-loop": "cloudflare; loops=1; subreqs=1",
+            "cf-connecting-ip": "92.253.34.207",
+            "cf-ew-via": "15",
+            "cf-ipcountry": "JO",
+            "cf-ray": "a48139b888018aae-AMM",
+            "cf-visitor": "{\"scheme\":\"https\"}",
+            "cf-worker": "n8n.cloud",
+            "content-type": "multipart/form-data; boundary=----geckoformboundary7ea36a416208700fd2b1985b0a047691",
+            "origin": "https://stately-naiad-5c7a02.netlify.app",
+            "priority": "u=0",
+            "referer": "https://stately-naiad-5c7a02.netlify.app/",
+            "sec-fetch-dest": "empty",
+            "sec-fetch-mode": "cors",
+            "sec-fetch-site": "cross-site",
+            "x-forwarded-for": "92.253.34.207, 172.71.112.144",
+            "x-forwarded-host": "aura12345haah.app.n8n.cloud",
+            "x-forwarded-port": "443",
+            "x-forwarded-proto": "https",
+            "x-forwarded-server": "traefik-prod-users-swc-18-5cd786d7b9-qvsh9",
+            "x-is-trusted": "yes",
+            "x-real-ip": "92.253.34.207"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "name": "jana",
+            "email": "manalmohammad2211@gmail.com",
+            "password": "7JcUn6:-,YQ?}%*",
+            "jobTitle": "data science"
+          },
+          "webhookUrl": "https://aura12345haah.app.n8n.cloud/webhook-test/31e5c3f3-491a-4bb9-b943-272de1f46c08",
+          "executionMode": "test"
+        },
+        "binary": {
+          "cv": {
+            "mimeType": "application/pdf",
+            "fileType": "pdf",
+            "fileExtension": "pdf",
+            "data": "filesystem-v2",
+            "fileName": "sample_cv.pdf",
+            "id": "filesystem-v2:workflows/iclFj81LYKl59k35/executions/temp/binary_data/446f5882-09f6-45e0-8e8a-f42f8a40a321",
+            "fileSize": "3.08 kB",
+            "bytes": 3076
+          }
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request2": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript2": {
+      "main": [
+        [
+          {
+            "node": "Convert to File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to File": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript3": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "3c2cbc80-be4c-421d-8b0c-423742a855cb",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "532aadfd39bc283c0fedf48fed4535ea1f365b99f208e1dda9535e8367922ffb"
+  },
+  "nodeGroups": [],
+  "id": "GPXe9kmWRdUaXPFH",
+  "tags": []
+}
